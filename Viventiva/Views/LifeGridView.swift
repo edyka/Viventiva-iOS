@@ -33,7 +33,7 @@ struct LifeGridView: View {
                     // Life Grid
                     LazyVStack(spacing: 2) {
                         ForEach(0..<lifeStore.lifeExpectancy, id: \.self) { yearIndex in
-                                HStack(spacing: 2) {
+                            HStack(spacing: 2) {
                                     // Year label
                                     if yearIndex % 5 == 0 {
                                         Text("\(yearIndex)")
