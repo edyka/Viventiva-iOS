@@ -181,7 +181,10 @@ class UIStore: ObservableObject {
     
     // MARK: - Persistence
     
+    private let saveQueue = DispatchQueue(label: "com.viventiva.uiStore", qos: .utility)
+    
     private func saveToDefaults() {
+        // Save on background queue to prevent UI blocking
         var gridLayoutRaw: String = "standard"
         switch gridLayout {
         case .standard: gridLayoutRaw = "standard"
@@ -196,7 +199,7 @@ class UIStore: ObservableObject {
         case .corner: pastWeekStyleRaw = "corner"
         }
         
-        let data: [String: Any] = [
+        let dataToSave: [String: Any] = [
             "darkMode": darkMode,
             "currentPage": currentPage,
             "currentTab": currentTab,
@@ -210,7 +213,11 @@ class UIStore: ObservableObject {
             "showMilestoneIndicators": showMilestoneIndicators,
             "showAgeLabels": showAgeLabels
         ]
-        defaults.set(data, forKey: storeKey)
+        
+        saveQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.defaults.set(dataToSave, forKey: self.storeKey)
+        }
     }
     
     private func loadFromDefaults() {

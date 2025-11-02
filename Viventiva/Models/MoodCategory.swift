@@ -44,55 +44,65 @@ struct MoodCategory: Codable {
 }
 
 extension Color {
+    // Cache for color conversions - significant performance optimization
+    private static var colorCache: [String: Color] = [:]
+    private static let cacheQueue = DispatchQueue(label: "com.viventiva.colorCache")
+    
     static func fromTailwind(_ tailwind: String) -> Color {
+        // Check cache first
+        if let cachedColor = cacheQueue.sync(execute: { colorCache[tailwind] }) {
+            return cachedColor
+        }
+        
         // Convert Tailwind color classes to SwiftUI colors
+        let color: Color
+        
         if tailwind.contains("green") {
-            if tailwind.contains("400") { return .green.opacity(0.7) }
-            if tailwind.contains("500") { return .green }
-            return .green
+            if tailwind.contains("400") { color = .green.opacity(0.7) }
+            else if tailwind.contains("500") { color = .green }
+            else { color = .green }
+        } else if tailwind.contains("blue") {
+            if tailwind.contains("300") { color = .blue.opacity(0.5) }
+            else if tailwind.contains("400") { color = .blue.opacity(0.7) }
+            else if tailwind.contains("500") { color = .blue }
+            else { color = .blue }
+        } else if tailwind.contains("pink") {
+            if tailwind.contains("400") { color = .pink.opacity(0.7) }
+            else if tailwind.contains("500") { color = .pink }
+            else { color = .pink }
+        } else if tailwind.contains("yellow") {
+            if tailwind.contains("400") { color = .yellow.opacity(0.7) }
+            else { color = .yellow }
+        } else if tailwind.contains("red") {
+            if tailwind.contains("400") { color = .red.opacity(0.7) }
+            else { color = .red }
+        } else if tailwind.contains("purple") {
+            if tailwind.contains("400") { color = .purple.opacity(0.7) }
+            else if tailwind.contains("500") { color = .purple }
+            else { color = .purple }
+        } else if tailwind.contains("orange") {
+            if tailwind.contains("400") { color = .orange.opacity(0.7) }
+            else if tailwind.contains("500") { color = .orange }
+            else { color = .orange }
+        } else if tailwind.contains("teal") {
+            if tailwind.contains("400") { color = .teal.opacity(0.7) }
+            else if tailwind.contains("500") { color = .teal }
+            else { color = .teal }
+        } else if tailwind.contains("gray") {
+            if tailwind.contains("400") { color = .gray.opacity(0.7) }
+            else { color = .gray }
+        } else if tailwind.contains("white") {
+            color = .white
+        } else {
+            color = .gray
         }
-        if tailwind.contains("blue") {
-            if tailwind.contains("300") { return .blue.opacity(0.5) }
-            if tailwind.contains("400") { return .blue.opacity(0.7) }
-            if tailwind.contains("500") { return .blue }
-            return .blue
+        
+        // Cache the result
+        cacheQueue.sync {
+            colorCache[tailwind] = color
         }
-        if tailwind.contains("pink") {
-            if tailwind.contains("400") { return .pink.opacity(0.7) }
-            if tailwind.contains("500") { return .pink }
-            return .pink
-        }
-        if tailwind.contains("yellow") {
-            if tailwind.contains("400") { return .yellow.opacity(0.7) }
-            return .yellow
-        }
-        if tailwind.contains("red") {
-            if tailwind.contains("400") { return .red.opacity(0.7) }
-            return .red
-        }
-        if tailwind.contains("purple") {
-            if tailwind.contains("400") { return .purple.opacity(0.7) }
-            if tailwind.contains("500") { return .purple }
-            return .purple
-        }
-        if tailwind.contains("orange") {
-            if tailwind.contains("400") { return .orange.opacity(0.7) }
-            if tailwind.contains("500") { return .orange }
-            return .orange
-        }
-        if tailwind.contains("teal") {
-            if tailwind.contains("400") { return .teal.opacity(0.7) }
-            if tailwind.contains("500") { return .teal }
-            return .teal
-        }
-        if tailwind.contains("gray") {
-            if tailwind.contains("400") { return .gray.opacity(0.7) }
-            return .gray
-        }
-        if tailwind.contains("white") {
-            return .white
-        }
-        return .gray
+        
+        return color
     }
 }
 

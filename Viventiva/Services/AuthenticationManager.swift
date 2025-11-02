@@ -48,10 +48,10 @@ class AuthenticationManager: ObservableObject {
             // Try to get current session - may throw if no session exists
             let session = try await client.auth.session
             
-            await MainActor.run {
+                await MainActor.run {
                 self.currentUser = session.user
-                self.isAuthenticated = true
-            }
+                    self.isAuthenticated = true
+                }
             await loadUserData(user: session.user)
         } catch {
             // No session found or error getting session
@@ -199,10 +199,10 @@ class AuthenticationManager: ObservableObject {
             // Handle OAuth callback URL - this should exchange the code for a session
             let session = try await client.auth.session(from: url)
             
-            await MainActor.run {
+                await MainActor.run {
                 self.currentUser = session.user
-                self.isAuthenticated = true
-                self.isLoading = false
+                    self.isAuthenticated = true
+                    self.isLoading = false
             }
             await loadUserData(user: session.user)
         } catch {

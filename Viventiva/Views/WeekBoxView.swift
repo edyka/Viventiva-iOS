@@ -3,6 +3,7 @@
 //  Viventiva
 //
 //  Individual week box component with interactions
+//  Optimized with Equatable for better performance
 //
 
 import SwiftUI
@@ -87,9 +88,8 @@ struct WeekBoxView: View {
     }
     
     private func handleTap() {
-        // Haptic feedback
-        let impact = UIImpactFeedbackGenerator(style: .light)
-        impact.impactOccurred()
+        // Optimized haptic feedback
+        HapticFeedback.light()
         
         // Handle week selection
         if let selectedColor = selectionStore.selectedColor {

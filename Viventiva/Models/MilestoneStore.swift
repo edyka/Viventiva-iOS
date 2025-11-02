@@ -137,19 +137,26 @@ class MilestoneStore: ObservableObject {
     
     // MARK: - Persistence
     
+    private let saveQueue = DispatchQueue(label: "com.viventiva.milestoneStore", qos: .utility)
+    
     private func saveToDefaults() {
-        let encoder = JSONEncoder()
-        do {
-            let data = MilestoneData(
-                milestones: milestones,
-                customCategories: customCategories,
-                customMoods: customMoods,
-                goals: goals
-            )
-            let encoded = try encoder.encode(data)
-            defaults.set(encoded, forKey: storeKey)
-        } catch {
-            print("Error saving milestones: \(error)")
+        // Save on background queue to prevent UI blocking
+        let dataToSave = MilestoneData(
+            milestones: milestones,
+            customCategories: customCategories,
+            customMoods: customMoods,
+            goals: goals
+        )
+        
+        saveQueue.async { [weak self] in
+            guard let self = self else { return }
+            let encoder = JSONEncoder()
+            do {
+                let encoded = try encoder.encode(dataToSave)
+                self.defaults.set(encoded, forKey: self.storeKey)
+            } catch {
+                print("Error saving milestones: \(error)")
+            }
         }
     }
     

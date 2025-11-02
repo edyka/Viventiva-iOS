@@ -180,13 +180,20 @@ class SelectionStore: ObservableObject {
     
     // MARK: - Persistence
     
+    private let saveQueue = DispatchQueue(label: "com.viventiva.selectionStore", qos: .utility)
+    
     private func saveToDefaults() {
-        let data: [String: Any] = [
+        // Save on background queue to prevent UI blocking
+        let dataToSave: [String: Any] = [
             "selectedWeeks": Array(selectedWeeks),
             "pinnedWeeks": Array(pinnedWeeks),
             "selectedColor": selectedColor as Any
         ]
-        defaults.set(data, forKey: storeKey)
+        
+        saveQueue.async { [weak self] in
+            guard let self = self else { return }
+            self.defaults.set(dataToSave, forKey: self.storeKey)
+        }
     }
     
     private func loadFromDefaults() {

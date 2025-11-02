@@ -24,37 +24,53 @@ class SupabaseService {
     // MARK: - User Profile
     
     func saveUserProfile(userId: String, profileData: UserProfileData) async throws {
-        guard let client = client else { throw SupabaseError.notConfigured }
-        
-        let profile = UserProfile(
-            userId: userId,
-            name: profileData.name,
-            birthDay: profileData.birthDay,
-            birthMonth: profileData.birthMonth,
-            birthYear: profileData.birthYear,
-            lifeExpectancy: profileData.lifeExpectancy,
-            updatedAt: Date()
-        )
-        
-        // Supabase Swift SDK upsert - using proper API
-        try await client.database
-            .from("user_profiles")
-            .upsert(profile)
-            .execute()
+        guard let client = client else { 
+            print("Error: Supabase client not configured")
+            throw SupabaseError.notConfigured 
+        }
+
+        do {
+            let profile = UserProfile(
+                userId: userId,
+                name: profileData.name,
+                birthDay: profileData.birthDay,
+                birthMonth: profileData.birthMonth,
+                birthYear: profileData.birthYear,
+                lifeExpectancy: profileData.lifeExpectancy,
+                updatedAt: Date()
+            )
+            
+            // Supabase Swift SDK upsert - using proper API
+            try await client.database
+                .from("user_profiles")
+                .upsert(profile)
+                .execute()
+        } catch {
+            print("Error saving user profile: \(error.localizedDescription)")
+            throw error
+        }
     }
     
     func getUserProfile(userId: String) async throws -> UserProfile? {
-        guard let client = client else { throw SupabaseError.notConfigured }
+        guard let client = client else { 
+            print("Error: Supabase client not configured")
+            throw SupabaseError.notConfigured 
+        }
         
-        // Supabase Swift SDK select with decode
-        let response: [UserProfile] = try await client.database
-            .from("user_profiles")
-            .select()
-            .eq("user_id", value: userId)
-            .execute()
-            .value
-        
-        return response.first
+        do {
+            // Supabase Swift SDK select with decode
+            let response: [UserProfile] = try await client.database
+                .from("user_profiles")
+                .select()
+                .eq("user_id", value: userId)
+                .execute()
+                .value
+            
+            return response.first
+        } catch {
+            print("Error fetching user profile: \(error.localizedDescription)")
+            throw error
+        }
     }
     
     // MARK: - Milestones

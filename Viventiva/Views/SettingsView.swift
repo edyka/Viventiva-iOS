@@ -16,9 +16,15 @@ struct SettingsView: View {
         NavigationView {
             Form {
                 Section(header: Text("Appearance")) {
-                    Toggle("Dark Mode", isOn: $uiStore.darkMode)
+                    Toggle("Dark Mode", isOn: Binding(
+                        get: { uiStore.darkMode },
+                        set: { uiStore.setDarkMode($0) }
+                    ))
                     
-                    Picker("Theme Color", selection: $uiStore.themePreset) {
+                    Picker("Theme Color", selection: Binding(
+                        get: { uiStore.themePreset },
+                        set: { uiStore.setThemePreset($0) }
+                    )) {
                         ForEach(ThemePreset.allCases, id: \.self) { preset in
                             Text(preset.rawValue.capitalized).tag(preset)
                         }
@@ -26,13 +32,19 @@ struct SettingsView: View {
                 }
                 
                 Section(header: Text("Grid")) {
-                    Picker("Layout", selection: $uiStore.gridLayout) {
+                    Picker("Layout", selection: Binding(
+                        get: { uiStore.gridLayout },
+                        set: { uiStore.setGridLayout($0) }
+                    )) {
                         Text("Standard").tag(GridLayout.standard)
                         Text("Compact").tag(GridLayout.compact)
                         Text("Quarterly").tag(GridLayout.quarterly)
                     }
                     
-                    Picker("Past Week Style", selection: $uiStore.pastWeekStyle) {
+                    Picker("Past Week Style", selection: Binding(
+                        get: { uiStore.pastWeekStyle },
+                        set: { uiStore.setPastWeekStyle($0) }
+                    )) {
                         Text("None").tag(PastWeekStyle.none)
                         Text("Hatch").tag(PastWeekStyle.hatch)
                         Text("Corner").tag(PastWeekStyle.corner)

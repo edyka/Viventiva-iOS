@@ -24,56 +24,63 @@ struct LifeGridView: View {
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Mood Palette
-                    MoodPaletteView(selectedColor: $selectedColor)
-                        .padding()
-                    
-                    // Life Grid
-                    LazyVStack(spacing: 2) {
-                        ForEach(0..<lifeStore.lifeExpectancy, id: \.self) { yearIndex in
-                            HStack(spacing: 2) {
-                                // Year label
-                                if yearIndex % 5 == 0 {
-                                    Text("\(yearIndex)")
-                                        .font(.system(size: 10))
-                                        .foregroundColor(.secondary)
-                                        .frame(width: 30)
-                                } else {
-                                    Spacer()
-                                        .frame(width: 30)
-                                }
-                                
-                                // Weeks row
-                                LazyHGrid(rows: [GridItem(.fixed(weekSize))], spacing: 2) {
-                                    ForEach(1...columns, id: \.self) { col in
-                                        let weekNumber = yearIndex * columns + col
-                                        WeekBoxView(weekNumber: weekNumber)
-                                            .frame(width: weekSize, height: weekSize)
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // Mood Palette
+                        MoodPaletteView(selectedColor: $selectedColor)
+                            .padding()
+                        
+                        // Life Grid
+                        LazyVStack(spacing: 2) {
+                            ForEach(0..<lifeStore.lifeExpectancy, id: \.self) { yearIndex in
+                                HStack(spacing: 2) {
+                                    // Year label
+                                    if yearIndex % 5 == 0 {
+                                        Text("\(yearIndex)")
+                                            .font(.system(size: 10))
+                                            .foregroundColor(.secondary)
+                                            .frame(width: 30)
+                                    } else {
+                                        Spacer()
+                                            .frame(width: 30)
+                                    }
+                                    
+                                    // Weeks row
+                                    LazyHGrid(rows: [GridItem(.fixed(weekSize))], spacing: 2) {
+                                        ForEach(1...columns, id: \.self) { col in
+                                            let weekNumber = yearIndex * columns + col
+                                            WeekBoxView(weekNumber: weekNumber)
+                                                .frame(width: weekSize, height: weekSize)
+                                                .id("week-\(weekNumber)")
+                                        }
                                     }
                                 }
                             }
+                            .padding()
                         }
-                        .padding()
                     }
                 }
-            }
-            .navigationTitle("Your Life")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        scrollToCurrentWeek()
-                    }) {
-                        Image(systemName: "location.fill")
+                .navigationTitle("Your Life")
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: {
+                            scrollToCurrentWeek(proxy: proxy)
+                        }) {
+                            Image(systemName: "location.fill")
+                        }
                     }
                 }
             }
         }
     }
     
-    private func scrollToCurrentWeek() {
-        // Scroll to current week - implementation depends on ScrollViewReader
+    private func scrollToCurrentWeek(proxy: ScrollViewProxy) {
+        let currentWeek = lifeStore.currentWeek
+        withAnimation {
+            proxy.scrollTo("week-\(currentWeek)", anchor: .center)
+        }
+        HapticFeedback.selection()
     }
 }
 

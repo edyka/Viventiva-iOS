@@ -95,16 +95,30 @@ class LifeStore: ObservableObject {
     
     // MARK: - Persistence
     
+    private let saveQueue = DispatchQueue(label: "com.viventiva.lifeStore", qos: .utility)
+    
     private func saveToDefaults() {
-        let data: [String: Any] = [
-            "birthDay": birthDay as Any,
-            "birthMonth": birthMonth as Any,
-            "birthYear": birthYear as Any,
-            "lifeExpectancy": lifeExpectancy,
-            "userName": userName,
-            "currentWeek": currentWeek
-        ]
-        defaults.set(data, forKey: storeKey)
+        // Capture current values
+        let day = birthDay
+        let month = birthMonth
+        let year = birthYear
+        let expectancy = lifeExpectancy
+        let name = userName
+        let week = currentWeek
+        
+        // Save on background queue to prevent UI blocking
+        saveQueue.async { [weak self] in
+            guard let self = self else { return }
+            let data: [String: Any] = [
+                "birthDay": day as Any,
+                "birthMonth": month as Any,
+                "birthYear": year as Any,
+                "lifeExpectancy": expectancy,
+                "userName": name,
+                "currentWeek": week
+            ]
+            self.defaults.set(data, forKey: self.storeKey)
+        }
     }
     
     private func loadFromDefaults() {
