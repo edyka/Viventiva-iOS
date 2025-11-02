@@ -54,7 +54,6 @@ struct LifeGridView: View {
                                     }
                                 }
                             }
-                            }
                         }
                         .padding()
                     }
