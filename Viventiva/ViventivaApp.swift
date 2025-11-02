@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct ViventivaApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var authManager = AuthenticationManager.shared
     @StateObject private var lifeStore = LifeStore.shared
     @StateObject private var milestoneStore = MilestoneStore.shared

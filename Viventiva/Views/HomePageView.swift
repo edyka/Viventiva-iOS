@@ -97,12 +97,17 @@ struct HomePageView: View {
         .sheet(isPresented: $showingEmailLogin) {
             EmailLoginView()
         }
-        .alert("Error", isPresented: .constant(authManager.errorMessage != nil)) {
+        .alert("Error", isPresented: Binding(
+            get: { authManager.errorMessage != nil },
+            set: { if !$0 { authManager.errorMessage = nil } }
+        )) {
             Button("OK") {
                 authManager.errorMessage = nil
             }
         } message: {
-            Text(authManager.errorMessage ?? "")
+            if let error = authManager.errorMessage {
+                Text(error)
+            }
         }
     }
 }

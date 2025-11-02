@@ -45,7 +45,13 @@ struct MainAppView: View {
     }
     
     private func setupAppearance() {
-        UITabBar.appearance().barTintColor = uiStore.darkMode ? .black : .white
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = uiStore.darkMode ? .black : .white
+        UITabBar.appearance().standardAppearance = appearance
+        if #available(iOS 15.0, *) {
+            UITabBar.appearance().scrollEdgeAppearance = appearance
+        }
     }
 }
 

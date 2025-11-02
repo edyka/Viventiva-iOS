@@ -14,7 +14,7 @@ class AuthenticationManager: ObservableObject {
     static let shared = AuthenticationManager()
     
     @Published var isAuthenticated: Bool = false
-    @Published var currentUser: User?
+    @Published var currentUser: AuthUser?
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     
@@ -45,14 +45,13 @@ class AuthenticationManager: ObservableObject {
         guard let client = supabaseClient else { return }
         
         do {
-            // Try to get current session
-            if let session = try? await client.auth.session,
-               let user = session.user {
+            let session = try await client.auth.session
+            if let user = session.user {
                 await MainActor.run {
-                    self.currentUser = User(id: user.id.uuidString, email: user.email, userMetadata: nil)
+                    self.currentUser = user
                     self.isAuthenticated = true
                 }
-                await loadUserData(user: User(id: user.id.uuidString, email: user.email, userMetadata: nil))
+                await loadUserData(user: user)
             } else {
                 await MainActor.run {
                     self.isAuthenticated = false
@@ -111,13 +110,11 @@ class AuthenticationManager: ObservableObject {
         do {
             let session = try await client.auth.signIn(email: email, password: password)
             await MainActor.run {
-                let user = session.user
-                self.currentUser = User(id: user.id.uuidString, email: user.email, userMetadata: nil)
+                self.currentUser = session.user
                 self.isAuthenticated = true
                 self.isLoading = false
             }
-            let user = session.user
-            await loadUserData(user: User(id: user.id.uuidString, email: user.email, userMetadata: nil))
+            await loadUserData(user: session.user)
         } catch {
             await MainActor.run {
                 isLoading = false
@@ -140,8 +137,7 @@ class AuthenticationManager: ObservableObject {
         do {
             let session = try await client.auth.signUp(email: email, password: password)
             await MainActor.run {
-                let user = session.user
-                self.currentUser = User(id: user.id.uuidString, email: user.email, userMetadata: nil)
+                self.currentUser = session.user
                 self.isAuthenticated = true
                 self.isLoading = false
             }
@@ -171,28 +167,50 @@ class AuthenticationManager: ObservableObject {
     
     // MARK: - User Data Loading
     
-    private func loadUserData(user: User) async {
+    private func loadUserData(user: AuthUser) async {
         // Load user profile and data from Supabase
         // This will be handled by the SupabaseService
+        Task {
+            do {
+                // Load profile and sync data
+                if let profile = try await SupabaseService.shared.getUserProfile(userId: user.id.uuidString) {
+                    await MainActor.run {
+                        // Update life store with profile data
+                        if let birthDay = profile.birthDay,
+                           let birthMonth = profile.birthMonth,
+                           let birthYear = profile.birthYear {
+                            LifeStore.shared.setBirthData(day: birthDay, month: birthMonth, year: birthYear)
+                        }
+                        if let expectancy = profile.lifeExpectancy {
+                            LifeStore.shared.setLifeExpectancy(expectancy)
+                        }
+                        if let name = profile.name {
+                            LifeStore.shared.setUserName(name)
+                        }
+                    }
+                }
+            } catch {
+                print("Error loading user data: \(error)")
+            }
+        }
     }
     
     func handleAuthCallback(url: URL) async {
         guard let client = supabaseClient else { return }
         
         do {
-            // Handle OAuth callback - the Supabase Swift SDK handles this automatically
-            // But we need to check for session after callback
+            // Handle OAuth callback URL
             try await client.auth.session(from: url)
             
             // Get the updated session
-            if let session = try? await client.auth.session,
-               let user = session.user {
+            let session = try await client.auth.session
+            if let user = session.user {
                 await MainActor.run {
-                    self.currentUser = User(id: user.id.uuidString, email: user.email, userMetadata: nil)
+                    self.currentUser = user
                     self.isAuthenticated = true
                     self.isLoading = false
                 }
-                await loadUserData(user: User(id: user.id.uuidString, email: user.email, userMetadata: nil))
+                await loadUserData(user: user)
             }
         } catch {
             await MainActor.run {
@@ -220,10 +238,5 @@ enum AuthError: LocalizedError {
     }
 }
 
-// Placeholder User type - replace with actual Supabase User type
-struct User {
-    let id: String
-    let email: String?
-    let userMetadata: [String: Any]?
-}
+// Using Supabase AuthUser type from the SDK
 

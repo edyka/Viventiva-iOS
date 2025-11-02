@@ -8,9 +8,6 @@
 import Foundation
 import Supabase
 
-// Note: The actual Supabase Swift SDK API may vary
-// These are placeholder implementations - adjust based on actual SDK version
-
 class SupabaseService {
     static let shared = SupabaseService()
     
@@ -39,27 +36,23 @@ class SupabaseService {
             updatedAt: Date()
         )
         
-        // Adjust based on actual Supabase Swift SDK API
-        // Example implementation (may need adjustment):
-        _ = try await client.database
+        // Supabase Swift SDK upsert
+        try await client.database
             .from("user_profiles")
-            .upsert(profile)
+            .upsert(profile, onConflict: "user_id")
+            .execute()
     }
     
     func getUserProfile(userId: String) async throws -> UserProfile? {
         guard let client = client else { throw SupabaseError.notConfigured }
         
-        // Adjust based on actual Supabase Swift SDK API
-        // Example implementation (may need adjustment):
-        let response = try await client.database
+        // Supabase Swift SDK select with decode
+        let profiles: [UserProfile] = try await client.database
             .from("user_profiles")
             .select()
             .eq("user_id", value: userId)
             .execute()
-        
-        // Parse response based on actual SDK response format
-        // Note: Adjust based on actual Supabase Swift SDK response structure
-        let profiles: [UserProfile] = try JSONDecoder().decode([UserProfile].self, from: response.data)
+            .value
         
         return profiles.first
     }
@@ -75,22 +68,21 @@ class SupabaseService {
             updatedAt: Date()
         )
         
-        _ = try await client.database
+        try await client.database
             .from("user_milestones")
-            .upsert(sync)
+            .upsert(sync, onConflict: "user_id")
+            .execute()
     }
     
     func getMilestones(userId: String) async throws -> MilestoneSyncData? {
         guard let client = client else { throw SupabaseError.notConfigured }
         
-        let response = try await client.database
+        let milestones: [UserMilestones] = try await client.database
             .from("user_milestones")
             .select()
             .eq("user_id", value: userId)
             .execute()
-        
-        // Parse response based on actual SDK response format
-        let milestones: [UserMilestones] = try JSONDecoder().decode([UserMilestones].self, from: response.data)
+            .value
         
         return milestones.first?.milestonesData
     }
@@ -106,22 +98,21 @@ class SupabaseService {
             updatedAt: Date()
         )
         
-        _ = try await client.database
+        try await client.database
             .from("user_selections")
-            .upsert(sync)
+            .upsert(sync, onConflict: "user_id")
+            .execute()
     }
     
     func getSelections(userId: String) async throws -> SelectionSyncData? {
         guard let client = client else { throw SupabaseError.notConfigured }
         
-        let response = try await client.database
+        let selections: [UserSelections] = try await client.database
             .from("user_selections")
             .select()
             .eq("user_id", value: userId)
             .execute()
-        
-        // Parse response based on actual SDK response format
-        let selections: [UserSelections] = try JSONDecoder().decode([UserSelections].self, from: response.data)
+            .value
         
         return selections.first?.selectionsData
     }
