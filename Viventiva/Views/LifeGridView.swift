@@ -34,26 +34,26 @@ struct LifeGridView: View {
                     LazyVStack(spacing: 2) {
                         ForEach(0..<lifeStore.lifeExpectancy, id: \.self) { yearIndex in
                             HStack(spacing: 2) {
-                                    // Year label
-                                    if yearIndex % 5 == 0 {
-                                        Text("\(yearIndex)")
-                                            .font(.system(size: 10))
-                                            .foregroundColor(.secondary)
-                                            .frame(width: 30)
-                                    } else {
-                                        Spacer()
-                                            .frame(width: 30)
-                                    }
-                                    
-                                    // Weeks row
-                                    LazyHGrid(rows: [GridItem(.fixed(weekSize))], spacing: 2) {
-                                        ForEach(1...columns, id: \.self) { col in
-                                            let weekNumber = yearIndex * columns + col
-                                            WeekBoxView(weekNumber: weekNumber)
-                                                .frame(width: weekSize, height: weekSize)
-                                        }
+                                // Year label
+                                if yearIndex % 5 == 0 {
+                                    Text("\(yearIndex)")
+                                        .font(.system(size: 10))
+                                        .foregroundColor(.secondary)
+                                        .frame(width: 30)
+                                } else {
+                                    Spacer()
+                                        .frame(width: 30)
+                                }
+                                
+                                // Weeks row
+                                LazyHGrid(rows: [GridItem(.fixed(weekSize))], spacing: 2) {
+                                    ForEach(1...columns, id: \.self) { col in
+                                        let weekNumber = yearIndex * columns + col
+                                        WeekBoxView(weekNumber: weekNumber)
+                                            .frame(width: weekSize, height: weekSize)
                                     }
                                 }
+                            }
                             }
                         }
                         .padding()
