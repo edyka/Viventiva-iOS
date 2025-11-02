@@ -36,10 +36,10 @@ class SupabaseService {
             updatedAt: Date()
         )
         
-        // Supabase Swift SDK upsert
+        // Supabase Swift SDK upsert - using proper API
         try await client.database
             .from("user_profiles")
-            .upsert(profile, onConflict: "user_id")
+            .upsert(profile)
             .execute()
     }
     
@@ -47,14 +47,14 @@ class SupabaseService {
         guard let client = client else { throw SupabaseError.notConfigured }
         
         // Supabase Swift SDK select with decode
-        let profiles: [UserProfile] = try await client.database
+        let response: [UserProfile] = try await client.database
             .from("user_profiles")
             .select()
             .eq("user_id", value: userId)
             .execute()
             .value
         
-        return profiles.first
+        return response.first
     }
     
     // MARK: - Milestones
@@ -70,21 +70,21 @@ class SupabaseService {
         
         try await client.database
             .from("user_milestones")
-            .upsert(sync, onConflict: "user_id")
+            .upsert(sync)
             .execute()
     }
     
     func getMilestones(userId: String) async throws -> MilestoneSyncData? {
         guard let client = client else { throw SupabaseError.notConfigured }
         
-        let milestones: [UserMilestones] = try await client.database
+        let response: [UserMilestones] = try await client.database
             .from("user_milestones")
             .select()
             .eq("user_id", value: userId)
             .execute()
             .value
         
-        return milestones.first?.milestonesData
+        return response.first?.milestonesData
     }
     
     // MARK: - Selections
@@ -100,21 +100,21 @@ class SupabaseService {
         
         try await client.database
             .from("user_selections")
-            .upsert(sync, onConflict: "user_id")
+            .upsert(sync)
             .execute()
     }
     
     func getSelections(userId: String) async throws -> SelectionSyncData? {
         guard let client = client else { throw SupabaseError.notConfigured }
         
-        let selections: [UserSelections] = try await client.database
+        let response: [UserSelections] = try await client.database
             .from("user_selections")
             .select()
             .eq("user_id", value: userId)
             .execute()
             .value
         
-        return selections.first?.selectionsData
+        return response.first?.selectionsData
     }
 }
 

@@ -45,20 +45,16 @@ class AuthenticationManager: ObservableObject {
         guard let client = supabaseClient else { return }
         
         do {
+            // Try to get current session - may throw if no session exists
             let session = try await client.auth.session
-            if let user = session.user {
-                await MainActor.run {
-                    self.currentUser = user
-                    self.isAuthenticated = true
-                }
-                await loadUserData(user: user)
-            } else {
-                await MainActor.run {
-                    self.isAuthenticated = false
-                    self.currentUser = nil
-                }
+            
+            await MainActor.run {
+                self.currentUser = session.user
+                self.isAuthenticated = true
             }
+            await loadUserData(user: session.user)
         } catch {
+            // No session found or error getting session
             await MainActor.run {
                 self.isAuthenticated = false
                 self.currentUser = nil
@@ -170,28 +166,29 @@ class AuthenticationManager: ObservableObject {
     private func loadUserData(user: AuthUser) async {
         // Load user profile and data from Supabase
         // This will be handled by the SupabaseService
-        Task {
-            do {
-                // Load profile and sync data
-                if let profile = try await SupabaseService.shared.getUserProfile(userId: user.id.uuidString) {
-                    await MainActor.run {
-                        // Update life store with profile data
-                        if let birthDay = profile.birthDay,
-                           let birthMonth = profile.birthMonth,
-                           let birthYear = profile.birthYear {
-                            LifeStore.shared.setBirthData(day: birthDay, month: birthMonth, year: birthYear)
-                        }
-                        if let expectancy = profile.lifeExpectancy {
-                            LifeStore.shared.setLifeExpectancy(expectancy)
-                        }
-                        if let name = profile.name {
-                            LifeStore.shared.setUserName(name)
-                        }
+        do {
+            // Use helper extension to get user ID as string
+            let userId = user.userIdString
+            
+            // Load profile and sync data
+            if let profile = try await SupabaseService.shared.getUserProfile(userId: userId) {
+                await MainActor.run {
+                    // Update life store with profile data
+                    if let birthDay = profile.birthDay,
+                       let birthMonth = profile.birthMonth,
+                       let birthYear = profile.birthYear {
+                        LifeStore.shared.setBirthData(day: birthDay, month: birthMonth, year: birthYear)
+                    }
+                    if let expectancy = profile.lifeExpectancy {
+                        LifeStore.shared.setLifeExpectancy(expectancy)
+                    }
+                    if let name = profile.name {
+                        LifeStore.shared.setUserName(name)
                     }
                 }
-            } catch {
-                print("Error loading user data: \(error)")
             }
+        } catch {
+            print("Error loading user data: \(error)")
         }
     }
     
@@ -199,19 +196,15 @@ class AuthenticationManager: ObservableObject {
         guard let client = supabaseClient else { return }
         
         do {
-            // Handle OAuth callback URL
-            try await client.auth.session(from: url)
+            // Handle OAuth callback URL - this should exchange the code for a session
+            let session = try await client.auth.session(from: url)
             
-            // Get the updated session
-            let session = try await client.auth.session
-            if let user = session.user {
-                await MainActor.run {
-                    self.currentUser = user
-                    self.isAuthenticated = true
-                    self.isLoading = false
-                }
-                await loadUserData(user: user)
+            await MainActor.run {
+                self.currentUser = session.user
+                self.isAuthenticated = true
+                self.isLoading = false
             }
+            await loadUserData(user: session.user)
         } catch {
             await MainActor.run {
                 self.errorMessage = error.localizedDescription

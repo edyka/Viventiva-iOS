@@ -76,9 +76,12 @@ struct CompleteProfileView: View {
         }
         
         // Save to Supabase if authenticated
-        if authManager.isAuthenticated, let userId = authManager.currentUser?.id {
+        if authManager.isAuthenticated, let user = authManager.currentUser {
             Task {
                 do {
+                    // Use helper extension to get user ID as string
+                    let userId = user.userIdString
+                    
                     let profileData = UserProfileData(
                         name: name.isEmpty ? nil : name,
                         birthDay: birthDay,
@@ -90,7 +93,9 @@ struct CompleteProfileView: View {
                 } catch {
                     print("Error saving profile: \(error)")
                 }
-                isSaving = false
+                await MainActor.run {
+                    isSaving = false
+                }
             }
         } else {
             isSaving = false
