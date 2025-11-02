@@ -31,8 +31,7 @@ struct LifeGridView: View {
                         .padding()
                     
                     // Life Grid
-                    ScrollView {
-                        LazyVStack(spacing: 2) {
+                    LazyVStack(spacing: 2) {
                             ForEach(0..<lifeStore.lifeExpectancy, id: \.self) { yearIndex in
                                 HStack(spacing: 2) {
                                     // Year label
